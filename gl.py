@@ -1,7 +1,7 @@
 #Oscar Fernando López Barrios
 #Carné 20679
 #Gráficas Por Computadora
-#SR5
+#SR6
 
 import struct
 from obj import *
@@ -242,6 +242,17 @@ class Render(object):
                     tC = V3(*model.tvertices[t3])
 
                     self.triangle(v1, v2, v3, (tA, tB, tC), texture)
+
+    def loadMatrix(self, translate, scale, rotate):
+        
+        translate = V3(*translate)
+        scale = V3(*scale)
+        rotate = V3(*rotate)
+
+        # translation_matrix = matrix([
+
+        # ])
+
 
     def triangle(self, A, B, C, cord_tex = None, texture = None, color = None, intensity = 1):
 

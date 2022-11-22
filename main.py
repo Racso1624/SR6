@@ -1,7 +1,7 @@
 #Oscar Fernando López Barrios
 #Carné 20679
 #Gráficas Por Computadora
-#SR5
+#SR6
 
 from gl import Render
 from texture import *
@@ -20,4 +20,4 @@ textura = Texture('./earth.bmp')
 
 r.load('./earth.obj', translate=[512, 512, 0], scale=[1, 1, 1], texture=textura)
 
-r.glFinish("sr5.bmp")
+r.glFinish("sr6.bmp")
