@@ -7,6 +7,8 @@ import struct
 from obj import *
 from vector import *
 from texture import *
+import numpy as np
+from math import *
 
 def char(c):
     #1 byte
@@ -83,6 +85,9 @@ class Render(object):
         self.viewport_height = 0
         self.viewport_width = 0
         self.texture = None
+        self.light = V3(0, 0, 1)
+        self.Model = None
+        self.View = None
 
     def glClear(self):
         self.framebuffer = [[self.clear_color for x in range(self.width)]
@@ -178,16 +183,27 @@ class Render(object):
                 y += 1 if y0 < y1 else -1
                 threshold += dx * 2
 
-    def transform_vertex(self, vertex, translate, scale):
+    def transform_vertex(self, vertex):
+        augmented_vertex = [
+            vertex[0],
+            vertex[1],
+            vertex[2],
+            1
+        ]
+
+        transformed_vertex = self.Model @ augmented_vertex
+        transformed_vertex = V3(transformed_vertex)
+
         return V3(
-            round((vertex[0] * scale[0]) + translate[0]),
-            round((vertex[1] * scale[1]) + translate[1]),
-            round((vertex[2] * scale[2]) + translate[2])
+            transformed_vertex.x / transformed_vertex.w,
+            transformed_vertex.y / transformed_vertex.w,
+            transformed_vertex.z / transformed_vertex.w
         )
 
-    def load(self, filename, translate, scale, texture = None):
+    def loadModel(self, filename, translate, scale, rotate, texture = None):
+        
+        self.loadModelMatrix(translate, scale, rotate)
         model = Obj(filename)
-
 
         for face in model.faces:
             vcount = len(face)
@@ -198,10 +214,10 @@ class Render(object):
                 f3 = face[2][0] - 1
                 f4 = face[3][0] - 1
 
-                v1 = self.transform_vertex(model.vertices[f1], translate, scale)
-                v2 = self.transform_vertex(model.vertices[f2], translate, scale)
-                v3 = self.transform_vertex(model.vertices[f3], translate, scale)
-                v4 = self.transform_vertex(model.vertices[f4], translate, scale)
+                v1 = self.transform_vertex(model.vertices[f1])
+                v2 = self.transform_vertex(model.vertices[f2])
+                v3 = self.transform_vertex(model.vertices[f3])
+                v4 = self.transform_vertex(model.vertices[f4])
 
                 if not texture:
                     self.triangle(v1, v2, v3)
@@ -226,9 +242,9 @@ class Render(object):
                 f2 = face[1][0] - 1
                 f3 = face[2][0] - 1
 
-                v1 = self.transform_vertex(model.vertices[f1], translate, scale)
-                v2 = self.transform_vertex(model.vertices[f2], translate, scale)
-                v3 = self.transform_vertex(model.vertices[f3], translate, scale)
+                v1 = self.transform_vertex(model.vertices[f1])
+                v2 = self.transform_vertex(model.vertices[f2])
+                v3 = self.transform_vertex(model.vertices[f3])
 
                 if not texture:
                     self.triangle(v1, v2, v3)
@@ -243,23 +259,59 @@ class Render(object):
 
                     self.triangle(v1, v2, v3, (tA, tB, tC), texture)
 
-    def loadMatrix(self, translate, scale, rotate):
-        
+    def loadModelMatrix(self, translate, scale, rotate):
+
         translate = V3(*translate)
         scale = V3(*scale)
         rotate = V3(*rotate)
 
-        # translation_matrix = matrix([
+        translation_matrix = np.matrix([
+            [1, 0, 0, translate.x],
+            [0, 1, 0, translate.y],
+            [0, 0, 1, translate.z],
+            [0, 0, 0, 1]
+        ])
 
-        # ])
+        scale_matrix = np.matrix([
+            [scale.x, 0, 0, 0],
+            [0, scale.y, 0, 0],
+            [0, 0, scale.z, 0],
+            [0, 0, 0, 1]
+        ])
+
+        rotation_x = np.matrix([
+            [1,             0,              0, 0],
+            [0, cos(rotate.x), -sin(rotate.x), 0],
+            [0, sin(rotate.x),  cos(rotate.x), 0],
+            [0,             0,              0, 1]
+        ])
+
+        rotation_y = np.matrix([
+            [ cos(rotate.y), 0, sin(rotate.y), 0],
+            [             0, 1,             0, 0],
+            [-sin(rotate.y), 0, cos(rotate.y), 0],
+            [             0, 0,             0, 1]
+        ])
+
+        rotation_z = np.matrix([
+            [cos(rotate.z), -sin(rotate.z), 0, 0],
+            [sin(rotate.z),  cos(rotate.z), 0, 0],
+            [            0,              0, 1, 0],
+            [            0,              0, 0, 1]
+        ])
+
+        rotation_matrix = rotation_x @ rotation_y @ rotation_z
+
+        self.Model = translation_matrix @ rotation_matrix @ scale_matrix
+
 
 
     def triangle(self, A, B, C, cord_tex = None, texture = None, color = None, intensity = 1):
 
-        light = V3(0, 0, 1)
+        
         normal = (B - A) * (C - A)
 
-        i = normal.norm() @ light.norm()
+        i = normal.norm() @ self.light.norm()
 
         if i < 0:
             i = abs(i)

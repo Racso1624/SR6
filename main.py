@@ -5,6 +5,7 @@
 
 from gl import Render
 from texture import *
+from math import *
 
 r = Render()
 
@@ -16,8 +17,8 @@ r.glColor(0, 0, 0)
 
 r.glClear()
 
-textura = Texture('./earth.bmp')
+textura = Texture('./cup_tex.bmp')
 
-r.load('./earth.obj', translate=[512, 512, 0], scale=[1, 1, 1], texture=textura)
+r.loadModel('./cup.obj', translate=[300, 800, 0], scale=[50, 50, 50], rotate=(0, pi/3, -pi/2), texture=textura)
 
 r.glFinish("sr6.bmp")
