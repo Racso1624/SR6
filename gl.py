@@ -95,7 +95,7 @@ class Render(object):
         for y in range(self.height)]
 
         self.zBuffer = [
-            [-9999 for x in range(self.width)]
+            [-999999 for x in range(self.width)]
             for y in range(self.height)
         ]
 
@@ -343,10 +343,8 @@ class Render(object):
 
 
     def triangle(self, A, B, C, cord_tex = None, texture = None, color = None, intensity = 1):
-
-        
+    
         normal = (B - A) * (C - A)
-
         i = normal.norm() @ self.light.norm()
 
         if i < 0:
@@ -361,9 +359,9 @@ class Render(object):
         min, max = bounding_box(A, B, C)
         min.round_coords()
         max.round_coords()
-
-        for x in range(min.x, max.x + 1):
-            for y in range(min.y, max.y + 1):
+        
+        for x in range(min.x, max.x):
+            for y in range(min.y, max.y):
                 w, v, u = barycentric(A, B, C, V3(x, y))
 
                 if(w < 0 or v < 0 or u < 0):
@@ -377,8 +375,7 @@ class Render(object):
                     color = texture.get_color_with_intensity(tx, ty, intensity)
 
                 z = A.z * w + B.z * v + C.z * u
-
-                if(x < len(self.zBuffer) and y < len(self.zBuffer) and z > self.zBuffer[x][y]):
+                if(x < len(self.zBuffer) and y < len(self.zBuffer[0]) and z > self.zBuffer[x][y]):
                     self.zBuffer[x][y] = z
                     self.glPoint(x, y, color)
 
