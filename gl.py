@@ -88,6 +88,7 @@ class Render(object):
         self.light = V3(0, 0, 1)
         self.Model = None
         self.View = None
+        self.Projection = None
 
     def glClear(self):
         self.framebuffer = [[self.clear_color for x in range(self.width)]
@@ -191,7 +192,7 @@ class Render(object):
             1
         ]
 
-        transformed_vertex = self.Model @ augmented_vertex
+        transformed_vertex = self.Projection @ self.View @ self.Model @ augmented_vertex
         transformed_vertex = V3(transformed_vertex)
 
         return V3(
@@ -321,12 +322,24 @@ class Render(object):
 
         self.View = Mi @ Op
 
+    
+    def loadProjectionMatrix(self, eye, center):
+        coeff = -1 / (eye.length() - center.length())
+
+        self.Projection = matrix([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, coeff, 1]
+        ])
+
     def lookAt(self, eye, center, up):
         z = (eye - center).norm()
         x = (up * z).norm()
         y = (z * x).norm()
 
         self.loadViewMatrix(x, y, z, center)
+        self.loadProjectionMatrix(eye, center)
 
 
     def triangle(self, A, B, C, cord_tex = None, texture = None, color = None, intensity = 1):
