@@ -304,6 +304,29 @@ class Render(object):
 
         self.Model = translation_matrix @ rotation_matrix @ scale_matrix
 
+    def loadViewMatrix(self, x, y, z, center):
+        Mi = matrix([
+            [x.x, x.y, x.z, 0],
+            [y.x, y.y, y.z, 0],
+            [z.x, z.y, z.z, 0],
+            [  0,   0,   0, 1],
+        ])
+
+        Op = matrix([
+            [1, 0, 0, -center.x],
+            [0, 1, 0, -center.y],
+            [0, 0, 1, -center.z],
+            [0, 0, 0, 1]
+        ])
+
+        self.View = Mi @ Op
+
+    def lookAt(self, eye, center, up):
+        z = (eye - center).norm()
+        x = (up * z).norm()
+        y = (z * x).norm()
+
+        self.loadViewMatrix(x, y, z, center)
 
 
     def triangle(self, A, B, C, cord_tex = None, texture = None, color = None, intensity = 1):

@@ -6,6 +6,7 @@
 from gl import Render
 from texture import *
 from math import *
+from vector import *
 
 r = Render()
 
@@ -17,8 +18,10 @@ r.glColor(0, 0, 0)
 
 r.glClear()
 
-textura = Texture('./cup_tex.bmp')
+textura = Texture('./human.bmp')
 
-r.loadModel('./cup.obj', translate=[300, 800, 0], scale=[50, 50, 50], rotate=(0, pi/3, -pi/2), texture=textura)
+r.lookAt(V3(0, 0, 10), V3(0, 0, 0), V3(0.1, 0.9, 0).norm())
+
+r.loadModel('./human.obj', translate=[512, 512, 0], scale=[400, 400, 400], rotate=(0, 0, -pi/2), texture=textura)
 
 r.glFinish("sr6.bmp")
