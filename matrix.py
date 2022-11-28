@@ -1,3 +1,9 @@
+#Oscar Fernando López Barrios
+#Carné 20679
+#Gráficas Por Computadora
+#SR6
+
+
 from array import array
 
 class Matrix(object):
