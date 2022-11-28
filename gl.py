@@ -191,7 +191,7 @@ class Render(object):
             1
         ])
 
-        transformed_vertex = self.Viewport @ self.Projection @ self.View @ self.Model @ augmented_vertex
+        transformed_vertex = self.View @ self.Model @ augmented_vertex
         transformed_vertex = V3(transformed_vertex)
 
         return V3(
@@ -331,8 +331,6 @@ class Render(object):
             [0, 0, 1, 0],
             [0, 0, coeff, 1]
         ])
-
-        print(self.Projection)
 
     def loadViewportMatrix(self):
         x= 0

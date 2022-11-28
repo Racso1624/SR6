@@ -22,6 +22,6 @@ textura = Texture('./human.bmp')
 
 r.lookAt(V3(0, 0, 10), V3(0, 0, 0), V3(0, 1, 0))
 
-r.loadModel('./human.obj', translate=[512, 512, 0], scale=[400, 400, 400], rotate=(0, 0, -pi/2), texture=textura)
+r.loadModel('./human.obj', translate=[512, 512, 0], scale=[400, 400, 400], rotate=(0, 0, -pi/3), texture=textura)
 
-r.glFinish("sr6.bmp")
+r.glFinish("dutch.bmp")
