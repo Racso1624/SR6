@@ -7,7 +7,7 @@ import struct
 from obj import *
 from vector import *
 from texture import *
-import numpy as np
+from matrix import *
 from math import *
 
 def char(c):
@@ -88,14 +88,13 @@ class Render(object):
         self.light = V3(0, 0, 1)
         self.Model = None
         self.View = None
-        self.Projection = None
 
     def glClear(self):
         self.framebuffer = [[self.clear_color for x in range(self.width)]
         for y in range(self.height)]
 
         self.zBuffer = [
-            [-999999 for x in range(self.width)]
+            [-99999 for x in range(self.width)]
             for y in range(self.height)
         ]
 
@@ -185,14 +184,14 @@ class Render(object):
                 threshold += dx * 2
 
     def transform_vertex(self, vertex):
-        augmented_vertex = [
+        augmented_vertex = Matrix([
             vertex[0],
             vertex[1],
             vertex[2],
             1
-        ]
+        ])
 
-        transformed_vertex = self.Projection @ self.View @ self.Model @ augmented_vertex
+        transformed_vertex = self.Viewport @ self.Projection @ self.View @ self.Model @ augmented_vertex
         transformed_vertex = V3(transformed_vertex)
 
         return V3(
@@ -266,35 +265,35 @@ class Render(object):
         scale = V3(*scale)
         rotate = V3(*rotate)
 
-        translation_matrix = np.matrix([
+        translation_matrix = Matrix([
             [1, 0, 0, translate.x],
             [0, 1, 0, translate.y],
             [0, 0, 1, translate.z],
             [0, 0, 0, 1]
         ])
 
-        scale_matrix = np.matrix([
+        scale_matrix = Matrix([
             [scale.x, 0, 0, 0],
             [0, scale.y, 0, 0],
             [0, 0, scale.z, 0],
             [0, 0, 0, 1]
         ])
 
-        rotation_x = np.matrix([
+        rotation_x = Matrix([
             [1,             0,              0, 0],
             [0, cos(rotate.x), -sin(rotate.x), 0],
             [0, sin(rotate.x),  cos(rotate.x), 0],
             [0,             0,              0, 1]
         ])
 
-        rotation_y = np.matrix([
+        rotation_y = Matrix([
             [ cos(rotate.y), 0, sin(rotate.y), 0],
             [             0, 1,             0, 0],
             [-sin(rotate.y), 0, cos(rotate.y), 0],
             [             0, 0,             0, 1]
         ])
 
-        rotation_z = np.matrix([
+        rotation_z = Matrix([
             [cos(rotate.z), -sin(rotate.z), 0, 0],
             [sin(rotate.z),  cos(rotate.z), 0, 0],
             [            0,              0, 1, 0],
@@ -306,14 +305,14 @@ class Render(object):
         self.Model = translation_matrix @ rotation_matrix @ scale_matrix
 
     def loadViewMatrix(self, x, y, z, center):
-        Mi = matrix([
+        Mi = Matrix([
             [x.x, x.y, x.z, 0],
             [y.x, y.y, y.z, 0],
             [z.x, z.y, z.z, 0],
             [  0,   0,   0, 1],
         ])
 
-        Op = matrix([
+        Op = Matrix([
             [1, 0, 0, -center.x],
             [0, 1, 0, -center.y],
             [0, 0, 1, -center.z],
@@ -326,11 +325,26 @@ class Render(object):
     def loadProjectionMatrix(self, eye, center):
         coeff = -1 / (eye.length() - center.length())
 
-        self.Projection = matrix([
+        self.Projection = Matrix([
             [1, 0, 0, 0],
             [0, 1, 0, 0],
             [0, 0, 1, 0],
             [0, 0, coeff, 1]
+        ])
+
+        print(self.Projection)
+
+    def loadViewportMatrix(self):
+        x= 0
+        y= 0
+        w = self.width / 2
+        h = self.height / 2
+
+        self.Viewport = Matrix([
+            [w, 0,   0, x + w],
+            [0, h,   0, y + h],
+            [0, 0, 128,   128],
+            [0, 0,   0,     1],
         ])
 
     def lookAt(self, eye, center, up):
@@ -340,6 +354,7 @@ class Render(object):
 
         self.loadViewMatrix(x, y, z, center)
         self.loadProjectionMatrix(eye, center)
+        self.loadViewportMatrix()
 
 
     def triangle(self, A, B, C, cord_tex = None, texture = None, color = None, intensity = 1):
@@ -360,8 +375,8 @@ class Render(object):
         min.round_coords()
         max.round_coords()
         
-        for x in range(min.x, max.x):
-            for y in range(min.y, max.y):
+        for x in range(min.x, max.x + 1):
+            for y in range(min.y, max.y + 1):
                 w, v, u = barycentric(A, B, C, V3(x, y))
 
                 if(w < 0 or v < 0 or u < 0):
@@ -375,9 +390,10 @@ class Render(object):
                     color = texture.get_color_with_intensity(tx, ty, intensity)
 
                 z = A.z * w + B.z * v + C.z * u
-                if(x < len(self.zBuffer) and y < len(self.zBuffer[0]) and z > self.zBuffer[x][y]):
+                if(x >= 0 and y >=0 and x < len(self.zBuffer) and y < len(self.zBuffer[0]) and z > self.zBuffer[x][y]):
                     self.zBuffer[x][y] = z
                     self.glPoint(x, y, color)
+                    
 
 
     def glFinish(self, filename):

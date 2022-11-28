@@ -3,13 +3,16 @@
 #Gráficas Por Computadora
 #SR6
 
-from numpy import *
+from matrix import *
 
 class V3(object):
     
     def __init__(self, x, y = 0, z = 0, w = 1):
-        if(type(x) == matrix):
-            self.x, self.y, self.z, self.w = x.tolist()[0]
+        if(type(x) == Matrix):
+            self.x = x.matrix[0][0]
+            self.y = x.matrix[1][0]
+            self.z = x.matrix[2][0]
+            self.w = x.matrix[3][0]
         else:
             self.x = x
             self.y = y
@@ -53,7 +56,6 @@ class V3(object):
     def norm(self):
         try:
             return self * (1 / self.length())
-
         except:
             return V3(-1,-1,-1)
 
